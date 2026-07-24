@@ -1,0 +1,161 @@
+MÓDULOS ADICIONALES Y PREPARACIÓN PROFESIONAL DEL SISTEMA
+
+Agregar a la aplicación una arquitectura preparada para crecimiento futuro, con módulos administrables desde el panel Super Administrador sin necesidad de modificar código.
+
+1. SISTEMA DE CALIFICACIONES Y REPUTACIÓN
+
+Crear un sistema de valoración entre usuarios.
+
+Cliente:
+- Puede calificar al conductor después de cada viaje.
+- Puede dejar estrellas y comentarios.
+- Puede reportar problemas.
+
+Conductor:
+- Puede calificar al cliente después de cada viaje.
+- Puede dejar comentarios.
+- Puede reportar inconvenientes.
+
+El sistema debe guardar historial de calificaciones y crear una reputación del usuario.
+
+El Super Administrador debe poder:
+- Ver todas las calificaciones.
+- Revisar reportes.
+- Administrar usuarios con mala reputación.
+- Suspender o bloquear cuentas si es necesario.
+
+2. SISTEMA DE SOPORTE Y RECLAMOS
+
+Crear un centro de ayuda integrado.
+
+Los clientes y conductores deben poder crear reclamos con:
+
+- Categoría del problema.
+- Descripción.
+- Fecha.
+- Información del viaje relacionado.
+- Posibilidad de adjuntar imágenes.
+
+Estados del reclamo:
+
+- Pendiente.
+- En revisión.
+- Resuelto.
+- Cerrado.
+
+Panel Super Administrador:
+
+- Ver todos los reclamos.
+- Responder usuarios.
+- Cambiar estados.
+- Ver historial completo del caso.
+
+Crear una sección de preguntas frecuentes (FAQ):
+
+- Cómo pedir un viaje.
+- Cómo cancelar un viaje.
+- Cómo funcionan los pagos.
+- Cómo registrarse como conductor.
+- Problemas comunes.
+
+Preparar la estructura para integrar en el futuro un asistente inteligente de soporte.
+
+3. SISTEMA DE MONETIZACIÓN
+
+Preparar diferentes formas de generar ingresos.
+
+COMISIÓN POR VIAJE:
+
+El sistema debe registrar:
+
+- Precio total del viaje.
+- Comisión de la plataforma.
+- Ganancia del conductor.
+- Historial de transacciones.
+
+El porcentaje de comisión debe poder modificarse desde el panel Super Administrador.
+
+4. SISTEMA PREMIUM Y SUSCRIPCIONES PARA CONDUCTORES
+
+Crear un sistema de planes para conductores.
+
+Planes configurables:
+
+- Plan gratuito.
+- Plan Premium.
+- Plan Profesional.
+- Plan Empresa.
+
+El Super Administrador debe poder:
+
+- Crear planes.
+- Modificar precios.
+- Modificar beneficios.
+- Activar o desactivar planes.
+- Ver usuarios suscritos.
+
+Los planes pueden ofrecer:
+
+- Mayor visibilidad dentro de la aplicación.
+- Perfil destacado.
+- Estadísticas avanzadas.
+- Insignia de conductor verificado o premium.
+
+Preparar integración futura con Mercado Pago para pagos de suscripciones.
+
+5. SISTEMA DE PROMOCIONES Y DESTACADOS
+
+Crear herramientas para promocionar usuarios o servicios.
+
+Permitir:
+
+- Destacar conductores.
+- Crear promociones temporales.
+- Configurar fechas.
+- Activar campañas desde el panel administrador.
+
+El sistema debe permitir configurar reglas de posicionamiento combinando:
+
+- Distancia.
+- Disponibilidad.
+- Calificación.
+- Tiempo de respuesta.
+- Nivel del conductor.
+- Promociones activas.
+
+6. SEGURIDAD Y CONFIANZA
+
+Crear herramientas para una plataforma segura.
+
+Incluir:
+
+- Verificación de conductores.
+- Estados de aprobación.
+- Perfil con información del conductor.
+- Historial de viajes.
+- Registro de actividad.
+- Sistema de reportes.
+- Bloqueo temporal o permanente.
+- Control administrativo.
+
+El Super Administrador debe tener control total sobre usuarios, conductores, viajes, pagos y seguridad.
+
+7. PREPARACIÓN PARA ESCALAR
+
+La arquitectura debe estar preparada para crecer.
+
+Debe permitir agregar fácilmente:
+
+- Nuevas ciudades.
+- Más conductores.
+- Más usuarios.
+- Más tipos de vehículos.
+- Moto remis.
+- Moto mandado.
+- Delivery.
+- Empresas asociadas.
+- Nuevos métodos de pago.
+
+La aplicación debe estar diseñada como una plataforma profesional escalable, no como un prototipo simple.
+
+Todas las funciones deben estar preparadas para ser administradas desde paneles internos y configuraciones, evitando depender de cambios constantes de código.
