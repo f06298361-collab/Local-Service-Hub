@@ -30,14 +30,23 @@ export default function WelcomeScreen() {
 
   const onSelectAuth = useCallback(async () => {
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
         strategy: 'oauth_google',
         // For web this defaults to the current path; for native it needs an explicit URI
         redirectUrl: AuthSession.makeRedirectUri(),
       });
 
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
+      // Clerk v3/v4: the completed session ID can live in three places depending
+      // on whether this is a direct SSO session, a completed sign-in, or a new
+      // sign-up. We must check all three or setActive is never called for new
+      // accounts and certain sign-in flows, causing an auth loop back to welcome.
+      const sessionId =
+        createdSessionId ??
+        (signIn?.status === 'complete' ? signIn.createdSessionId : undefined) ??
+        (signUp?.status === 'complete' ? signUp.createdSessionId : undefined);
+
+      if (sessionId && setActive) {
+        await setActive({ session: sessionId });
       }
     } catch (err) {
       console.error('OAuth error', err);
