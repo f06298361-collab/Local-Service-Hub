@@ -41,7 +41,7 @@ async function buildDriverPublic(driver: typeof driversTable.$inferSelect) {
 // GET /api/drivers/available
 router.get("/available", requireAuth, async (req: AuthenticatedRequest, res) => {
   const serviceTypeId = req.query.serviceTypeId ? Number(req.query.serviceTypeId) : undefined;
-  const conditions = [eq(driversTable.isAvailable, true), eq(driversTable.status, "approved")];
+  const conditions = [eq(driversTable.isOnline, true), eq(driversTable.isAvailable, true), eq(driversTable.status, "approved")];
   if (serviceTypeId) conditions.push(eq(driversTable.serviceTypeId, serviceTypeId));
 
   const drivers = await db
@@ -131,22 +131,51 @@ router.patch("/me", requireAuth, async (req: AuthenticatedRequest, res) => {
   res.json(updated);
 });
 
+// GET /api/drivers/me/status — current availability snapshot
+router.get("/me/status", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const [driver] = await db.select().from(driversTable).where(eq(driversTable.userId, req.user!.id)).limit(1);
+  if (!driver) { res.status(404).json({ error: "Not a driver" }); return; }
+  res.json({
+    status: driver.status,
+    isOnline: driver.isOnline,
+    isAvailable: driver.isAvailable,
+    availabilityUpdatedAt: driver.availabilityUpdatedAt,
+    lat: driver.lat,
+    lng: driver.lng,
+    // Derived: truly ready to receive trip requests
+    readyForTrips: driver.status === "approved" && driver.isOnline && driver.isAvailable,
+  });
+});
+
 // PATCH /api/drivers/me/availability
+// isOnline:   true → driver activated (went online); false → driver deactivated (went offline)
+// isAvailable: true → ready to receive trip requests; false → online but not taking trips
+// Going offline forces isAvailable = false automatically.
 router.patch("/me/availability", requireAuth, async (req: AuthenticatedRequest, res) => {
-  const { isAvailable, lat, lng } = req.body;
+  const { isOnline, isAvailable, lat, lng } = req.body;
   const [driver] = await db.select().from(driversTable).where(eq(driversTable.userId, req.user!.id)).limit(1);
   if (!driver) { res.status(404).json({ error: "Not a driver" }); return; }
   if (driver.status !== "approved") { res.status(403).json({ error: "Driver not approved" }); return; }
 
+  // Cannot be available while offline
+  const nextOnline = isOnline !== undefined ? isOnline : driver.isOnline;
+  const nextAvailable = !nextOnline ? false : (isAvailable !== undefined ? isAvailable : driver.isAvailable);
+
   const [updated] = await db.update(driversTable)
     .set({
-      isAvailable,
+      isOnline: nextOnline,
+      isAvailable: nextAvailable,
+      availabilityUpdatedAt: new Date(),
       ...(lat !== undefined && { lat }),
       ...(lng !== undefined && { lng }),
     })
     .where(eq(driversTable.id, driver.id))
     .returning();
-  res.json(updated);
+
+  res.json({
+    ...updated,
+    readyForTrips: updated.status === "approved" && updated.isOnline && updated.isAvailable,
+  });
 });
 
 // PATCH /api/drivers/me/location

@@ -98,7 +98,10 @@ export const driversTable = pgTable("drivers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   status: driverStatusEnum("status").notNull().default("pending"),
+  // Availability state
+  isOnline: boolean("is_online").notNull().default(false),
   isAvailable: boolean("is_available").notNull().default(false),
+  availabilityUpdatedAt: timestamp("availability_updated_at"),
   rating: real("rating").notNull().default(5.0),
   totalTrips: integer("total_trips").notNull().default(0),
   totalEarnings: real("total_earnings").notNull().default(0),
