@@ -181,6 +181,27 @@ export const insertTripSchema = createInsertSchema(tripsTable).omit({ id: true, 
 export type InsertTrip = z.infer<typeof insertTripSchema>;
 export type Trip = typeof tripsTable.$inferSelect;
 
+// ─── TRIP REQUESTS ────────────────────────────────────────────────────────────
+
+export const tripRequestStatusEnum = pgEnum("trip_request_status", [
+  "offered",   // system offered trip to driver
+  "accepted",  // driver accepted
+  "rejected",  // driver rejected
+]);
+
+export const tripRequestsTable = pgTable("trip_requests", {
+  id: serial("id").primaryKey(),
+  tripId: integer("trip_id").notNull().references(() => tripsTable.id, { onDelete: "cascade" }),
+  driverId: integer("driver_id").notNull().references(() => driversTable.id),
+  status: tripRequestStatusEnum("status").notNull().default("offered"),
+  offeredAt: timestamp("offered_at").notNull().defaultNow(),
+  respondedAt: timestamp("responded_at"),
+});
+
+export const insertTripRequestSchema = createInsertSchema(tripRequestsTable).omit({ id: true, offeredAt: true });
+export type InsertTripRequest = z.infer<typeof insertTripRequestSchema>;
+export type TripRequest = typeof tripRequestsTable.$inferSelect;
+
 // ─── PAYMENTS ────────────────────────────────────────────────────────────────
 
 export const paymentsTable = pgTable("payments", {

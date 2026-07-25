@@ -8,8 +8,9 @@ import {
   notificationsTable,
   paymentsTable,
   platformConfigTable,
+  tripRequestsTable,
 } from "@workspace/db";
-import { eq, and, or, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql, notInArray } from "drizzle-orm";
 import { requireAuth, type AuthenticatedRequest } from "../lib/authMiddleware";
 
 const router = Router();
@@ -106,6 +107,144 @@ router.post("/", requireAuth, async (req: AuthenticatedRequest, res) => {
   }).returning();
 
   res.status(201).json(trip);
+});
+
+// GET /api/trips/pending — driver sees trips available to accept
+// Excludes trips the driver already rejected. Matches driver's service type.
+router.get("/pending", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const [driver] = await db
+    .select()
+    .from(driversTable)
+    .where(eq(driversTable.userId, req.user!.id))
+    .limit(1);
+  if (!driver) { res.status(403).json({ error: "Not a driver" }); return; }
+  if (!driver.isOnline || !driver.isAvailable) {
+    res.status(403).json({ error: "Driver must be online and available" }); return;
+  }
+  if (driver.status !== "approved") {
+    res.status(403).json({ error: "Driver not approved" }); return;
+  }
+
+  // Find trip IDs this driver already responded to
+  const responded = await db
+    .select({ tripId: tripRequestsTable.tripId })
+    .from(tripRequestsTable)
+    .where(eq(tripRequestsTable.driverId, driver.id));
+  const respondedIds = responded.map((r) => r.tripId);
+
+  const conditions = [eq(tripsTable.status, "searching")];
+  if (driver.serviceTypeId) {
+    conditions.push(eq(tripsTable.serviceTypeId, driver.serviceTypeId));
+  }
+  if (respondedIds.length > 0) {
+    conditions.push(notInArray(tripsTable.id, respondedIds));
+  }
+
+  const trips = await db
+    .select()
+    .from(tripsTable)
+    .where(and(...conditions))
+    .orderBy(desc(tripsTable.createdAt))
+    .limit(20);
+
+  res.json(trips);
+});
+
+// POST /api/trips/:id/accept — driver accepts a trip (atomic)
+router.post("/:id/accept", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const tripId = Number(req.params.id);
+
+  const [driver] = await db
+    .select()
+    .from(driversTable)
+    .where(eq(driversTable.userId, req.user!.id))
+    .limit(1);
+  if (!driver) { res.status(403).json({ error: "Not a driver" }); return; }
+  if (driver.status !== "approved") { res.status(403).json({ error: "Driver not approved" }); return; }
+  if (!driver.isOnline || !driver.isAvailable) {
+    res.status(403).json({ error: "Driver must be online and available" }); return;
+  }
+
+  const [trip] = await db
+    .select()
+    .from(tripsTable)
+    .where(and(eq(tripsTable.id, tripId), eq(tripsTable.status, "searching")))
+    .limit(1);
+  if (!trip) { res.status(404).json({ error: "Trip not found or no longer available" }); return; }
+  if (driver.serviceTypeId && trip.serviceTypeId !== driver.serviceTypeId) {
+    res.status(403).json({ error: "Service type mismatch" }); return;
+  }
+
+  // Atomic assignment: only one driver wins
+  const [assigned] = await db
+    .update(tripsTable)
+    .set({ driverId: driver.id, status: "accepted", acceptedAt: new Date() })
+    .where(and(eq(tripsTable.id, tripId), eq(tripsTable.status, "searching")))
+    .returning();
+  if (!assigned) { res.status(409).json({ error: "Trip was already taken" }); return; }
+
+  // Record the accepted request
+  await db.insert(tripRequestsTable).values({
+    tripId,
+    driverId: driver.id,
+    status: "accepted",
+    respondedAt: new Date(),
+  });
+
+  // Driver is now busy
+  await db
+    .update(driversTable)
+    .set({ isAvailable: false, availabilityUpdatedAt: new Date() })
+    .where(eq(driversTable.id, driver.id));
+
+  // Notify customer
+  await db.insert(notificationsTable).values({
+    userId: trip.customerId,
+    type: "trip_accepted",
+    title: "Conductor asignado",
+    body: "Un conductor aceptó tu viaje y está en camino.",
+    tripId,
+  });
+
+  res.json(assigned);
+});
+
+// POST /api/trips/:id/reject — driver rejects a trip request
+router.post("/:id/reject", requireAuth, async (req: AuthenticatedRequest, res) => {
+  const tripId = Number(req.params.id);
+  const { reason } = req.body;
+
+  const [driver] = await db
+    .select()
+    .from(driversTable)
+    .where(eq(driversTable.userId, req.user!.id))
+    .limit(1);
+  if (!driver) { res.status(403).json({ error: "Not a driver" }); return; }
+
+  const [trip] = await db
+    .select()
+    .from(tripsTable)
+    .where(eq(tripsTable.id, tripId))
+    .limit(1);
+  if (!trip) { res.status(404).json({ error: "Trip not found" }); return; }
+
+  // Upsert: avoid duplicate rejection records
+  const [existing] = await db
+    .select()
+    .from(tripRequestsTable)
+    .where(and(eq(tripRequestsTable.tripId, tripId), eq(tripRequestsTable.driverId, driver.id)))
+    .limit(1);
+
+  if (!existing) {
+    await db.insert(tripRequestsTable).values({
+      tripId,
+      driverId: driver.id,
+      status: "rejected",
+      respondedAt: new Date(),
+    });
+  }
+
+  res.json({ ok: true, reason: reason ?? null });
 });
 
 // GET /api/trips/:id
