@@ -1,0 +1,1 @@
+- [Clerk Expo v3 auth flow](clerk-expo-v3-auth-flow.md) — useOAuth deprecated; use useSSO+startSSOFlow; RoleRouter stuck-state fix; ClerkLoaded + proxyUrl required.

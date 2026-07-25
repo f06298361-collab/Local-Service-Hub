@@ -4,7 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ClerkProvider, useAuth } from '@clerk/expo';
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/expo';
 import * as SecureStore from 'expo-secure-store';
 import { AuthProvider, useAppAuth } from '@/context/AuthContext';
 import { TripProvider } from '@/context/TripContext';
@@ -21,7 +21,8 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
 
-setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+const _domain = process.env.EXPO_PUBLIC_DOMAIN;
+if (_domain) setBaseUrl(`https://${_domain}`);
 
 let globalGetToken: (() => Promise<string | null>) | null = null;
 setAuthTokenGetter(async () => {
@@ -67,30 +68,33 @@ function RoleRouter() {
     if (!isLoaded || (isSignedIn && isLoadingProfile)) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    
+
     if (!isSignedIn) {
       if (!inAuthGroup) {
         router.replace('/(auth)/welcome');
       }
+    } else if (!profile) {
+      // Signed in but profile not loaded (new user or API error) → profile setup
+      if (segments[0] !== 'profile-setup') {
+        router.replace('/profile-setup');
+      }
     } else {
-      if (profile && !profile.firstName) {
+      if (!profile.firstName) {
         if (segments[0] !== 'profile-setup') {
           router.replace('/profile-setup');
         }
-      } else if (profile) {
+      } else {
         const role = profile.role;
         const currentGroup = segments[0];
-        
+
         if (role === 'customer' && currentGroup !== '(customer)') {
           router.replace('/(customer)/home');
         } else if (role === 'driver' && currentGroup !== '(driver)') {
           router.replace('/(driver)/home');
         } else if (role === 'admin' && currentGroup !== '(admin)') {
           router.replace('/(admin)/dashboard');
-        } else if (!role) {
-            // Assume customer default if missing or unassigned initially?
-            // Actually, server sets role. Let's just push to customer if it somehow is null and needs routing.
-            if (currentGroup !== '(customer)') router.replace('/(customer)/home');
+        } else if (!role && currentGroup !== '(customer)') {
+          router.replace('/(customer)/home');
         }
       }
     }
@@ -124,27 +128,30 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <ClerkProvider 
-      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!} 
+    <ClerkProvider
+      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
       tokenCache={tokenCache}
+      proxyUrl={process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined}
     >
-      <SafeAreaProvider>
-        <ErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <KeyboardProvider>
-                <AuthTokenSetter>
-                  <AuthProvider>
-                    <TripProvider>
-                      <RoleRouter />
-                    </TripProvider>
-                  </AuthProvider>
-                </AuthTokenSetter>
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </QueryClientProvider>
-        </ErrorBoundary>
-      </SafeAreaProvider>
+      <ClerkLoaded>
+        <SafeAreaProvider>
+          <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <KeyboardProvider>
+                  <AuthTokenSetter>
+                    <AuthProvider>
+                      <TripProvider>
+                        <RoleRouter />
+                      </TripProvider>
+                    </AuthProvider>
+                  </AuthTokenSetter>
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </QueryClientProvider>
+          </ErrorBoundary>
+        </SafeAreaProvider>
+      </ClerkLoaded>
     </ClerkProvider>
   );
 }

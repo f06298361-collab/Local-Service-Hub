@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { useOAuth } from '@clerk/expo';
+import { useSSO } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
+import * as AuthSession from 'expo-auth-session';
 
-// To support OAuth on web we need this
+// Preloads the browser on Android to reduce auth load time
 export const useWarmUpBrowser = () => {
-  React.useEffect(() => {
-    if (Platform.OS !== 'web') {
+  useEffect(() => {
+    if (Platform.OS === 'android') {
       void WebBrowser.warmUpAsync();
       return () => {
         void WebBrowser.coolDownAsync();
@@ -25,22 +25,24 @@ export default function WelcomeScreen() {
   useWarmUpBrowser();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  
-  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
 
-  const onSelectAuth = async () => {
+  const { startSSOFlow } = useSSO();
+
+  const onSelectAuth = useCallback(async () => {
     try {
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL('/', { scheme: 'transmovil' }),
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: 'oauth_google',
+        // For web this defaults to the current path; for native it needs an explicit URI
+        redirectUrl: AuthSession.makeRedirectUri(),
       });
 
       if (createdSessionId && setActive) {
-        setActive({ session: createdSessionId });
+        await setActive({ session: createdSessionId });
       }
     } catch (err) {
       console.error('OAuth error', err);
     }
-  };
+  }, [startSSOFlow]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 34) }]}>
