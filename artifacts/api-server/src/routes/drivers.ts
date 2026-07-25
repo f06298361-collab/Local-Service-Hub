@@ -71,15 +71,28 @@ router.get("/me", requireAuth, async (req: AuthenticatedRequest, res) => {
 
 // POST /api/drivers/me — register as driver
 router.post("/me", requireAuth, async (req: AuthenticatedRequest, res) => {
-  const { serviceTypeId, bio } = req.body;
+  const {
+    serviceTypeId, bio,
+    dni, birthDate, address,
+    emergencyContactName, emergencyContactPhone,
+    licenseNumber, licenseExpiry, licensePhotoUrl,
+  } = req.body;
   const existing = await db.select().from(driversTable).where(eq(driversTable.userId, req.user!.id)).limit(1);
   if (existing.length > 0) { res.status(409).json({ error: "Already a driver" }); return; }
 
   const [driver] = await db.insert(driversTable).values({
     userId: req.user!.id,
-    serviceTypeId,
+    serviceTypeId: serviceTypeId ?? null,
     bio: bio ?? null,
     status: "pending",
+    dni: dni ?? null,
+    birthDate: birthDate ? new Date(birthDate) : null,
+    address: address ?? null,
+    emergencyContactName: emergencyContactName ?? null,
+    emergencyContactPhone: emergencyContactPhone ?? null,
+    licenseNumber: licenseNumber ?? null,
+    licenseExpiry: licenseExpiry ? new Date(licenseExpiry) : null,
+    licensePhotoUrl: licensePhotoUrl ?? null,
   }).returning();
 
   // Update user role
@@ -90,12 +103,29 @@ router.post("/me", requireAuth, async (req: AuthenticatedRequest, res) => {
 
 // PATCH /api/drivers/me
 router.patch("/me", requireAuth, async (req: AuthenticatedRequest, res) => {
-  const { serviceTypeId, bio } = req.body;
+  const {
+    serviceTypeId, bio,
+    dni, birthDate, address,
+    emergencyContactName, emergencyContactPhone,
+    licenseNumber, licenseExpiry, licensePhotoUrl,
+  } = req.body;
   const [driver] = await db.select().from(driversTable).where(eq(driversTable.userId, req.user!.id)).limit(1);
   if (!driver) { res.status(404).json({ error: "Not a driver" }); return; }
 
   const [updated] = await db.update(driversTable)
-    .set({ ...(serviceTypeId && { serviceTypeId }), ...(bio !== undefined && { bio }) })
+    .set({
+      ...(serviceTypeId !== undefined && { serviceTypeId }),
+      ...(bio !== undefined && { bio }),
+      ...(dni !== undefined && { dni }),
+      ...(birthDate !== undefined && { birthDate: birthDate ? new Date(birthDate) : null }),
+      ...(address !== undefined && { address }),
+      ...(emergencyContactName !== undefined && { emergencyContactName }),
+      ...(emergencyContactPhone !== undefined && { emergencyContactPhone }),
+      ...(licenseNumber !== undefined && { licenseNumber }),
+      ...(licenseExpiry !== undefined && { licenseExpiry: licenseExpiry ? new Date(licenseExpiry) : null }),
+      ...(licensePhotoUrl !== undefined && { licensePhotoUrl }),
+      updatedAt: new Date(),
+    })
     .where(eq(driversTable.id, driver.id))
     .returning();
   res.json(updated);

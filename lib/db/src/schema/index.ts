@@ -16,6 +16,7 @@ import { z } from "zod/v4";
 
 export const userRoleEnum = pgEnum("user_role", ["customer", "driver", "admin", "super_admin"]);
 export const driverStatusEnum = pgEnum("driver_status", ["pending", "approved", "suspended"]);
+export const vehicleCategoryEnum = pgEnum("vehicle_category", ["auto", "moto", "other"]);
 export const tripStatusEnum = pgEnum("trip_status", [
   "searching",
   "accepted",
@@ -60,6 +61,7 @@ export const serviceTypesTable = pgTable("service_types", {
   name: text("name").notNull(),
   icon: text("icon").notNull().default("car"),
   description: text("description").notNull().default(""),
+  category: vehicleCategoryEnum("category").notNull().default("auto"),
   basePrice: real("base_price").notNull().default(0),
   pricePerKm: real("price_per_km").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
@@ -100,10 +102,21 @@ export const driversTable = pgTable("drivers", {
   rating: real("rating").notNull().default(5.0),
   totalTrips: integer("total_trips").notNull().default(0),
   totalEarnings: real("total_earnings").notNull().default(0),
-  serviceTypeId: integer("service_type_id").notNull().references(() => serviceTypesTable.id),
+  serviceTypeId: integer("service_type_id").references(() => serviceTypesTable.id),
   bio: text("bio"),
   lat: real("lat"),
   lng: real("lng"),
+  // Personal / identity
+  dni: text("dni"),
+  birthDate: timestamp("birth_date"),
+  address: text("address"),
+  // Emergency contact
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  // Driver's license
+  licenseNumber: text("license_number"),
+  licenseExpiry: timestamp("license_expiry"),
+  licensePhotoUrl: text("license_photo_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -125,6 +138,10 @@ export const vehiclesTable = pgTable("vehicles", {
   serviceTypeId: integer("service_type_id").notNull().references(() => serviceTypesTable.id),
   photoUrl: text("photo_url"),
   capacity: integer("capacity").notNull().default(4),
+  // Documents
+  insuranceExpiry: timestamp("insurance_expiry"),
+  technicalInspectionExpiry: timestamp("technical_inspection_expiry"),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
