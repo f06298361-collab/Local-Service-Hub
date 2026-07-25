@@ -7,12 +7,13 @@ type AuthContextType = {
   isSignedIn: boolean;
   user: any; // Clerk user
   profile: UserProfile | undefined;
-  role: 'customer' | 'driver' | 'admin' | null;
+  role: 'customer' | 'driver' | 'admin' | 'super_admin' | null;
   isLoadingProfile: boolean;
   refetchProfile: () => void;
   isCustomer: boolean;
   isDriver: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -39,7 +40,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refetchProfile,
     isCustomer: role === 'customer',
     isDriver: role === 'driver',
-    isAdmin: role === 'admin',
+    isAdmin: role === 'admin' || role === 'super_admin',
+    isSuperAdmin: role === 'super_admin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

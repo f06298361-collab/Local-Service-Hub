@@ -14,7 +14,7 @@ import { z } from "zod/v4";
 
 // ─── ENUMS ──────────────────────────────────────────────────────────────────
 
-export const userRoleEnum = pgEnum("user_role", ["customer", "driver", "admin"]);
+export const userRoleEnum = pgEnum("user_role", ["customer", "driver", "admin", "super_admin"]);
 export const driverStatusEnum = pgEnum("driver_status", ["pending", "approved", "suspended"]);
 export const tripStatusEnum = pgEnum("trip_status", [
   "searching",

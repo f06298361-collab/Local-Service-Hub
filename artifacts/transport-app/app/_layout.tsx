@@ -93,6 +93,8 @@ function RoleRouter() {
           router.replace('/(driver)/home');
         } else if (role === 'admin' && currentGroup !== '(admin)') {
           router.replace('/(admin)/dashboard');
+        } else if (role === 'super_admin' && currentGroup !== '(admin)') {
+          router.replace('/(admin)/dashboard');
         } else if (!role && currentGroup !== '(customer)') {
           router.replace('/(customer)/home');
         }

@@ -60,15 +60,30 @@ export async function requireAuth(
 }
 
 /**
- * Middleware: require admin role.
+ * Middleware: require admin or super_admin role.
  */
 export function requireAdmin(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
 ): void {
-  if (!req.user || req.user.role !== "admin") {
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "super_admin")) {
     res.status(403).json({ error: "Forbidden: admin only" });
+    return;
+  }
+  next();
+}
+
+/**
+ * Middleware: require super_admin role exclusively.
+ */
+export function requireSuperAdmin(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.user || req.user.role !== "super_admin") {
+    res.status(403).json({ error: "Forbidden: super admin only" });
     return;
   }
   next();
