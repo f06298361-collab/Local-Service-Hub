@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCancelTrip } from '@workspace/api-client-react';
-import { MaterialIcons } from '@expo-vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import TripMap from '@/components/TripMap';
 import { useTrip } from '@/context/TripContext';
 
 export default function CustomerTrip() {
@@ -42,35 +42,7 @@ export default function CustomerTrip() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {Platform.OS !== 'web' ? (
-        <MapView 
-          style={styles.map} 
-          provider={PROVIDER_DEFAULT}
-          initialRegion={{
-            latitude: activeTrip.pickupLat,
-            longitude: activeTrip.pickupLng,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          }}
-        >
-          <Marker coordinate={{ latitude: activeTrip.pickupLat, longitude: activeTrip.pickupLng }}>
-            <MaterialIcons name="person-pin-circle" size={40} color={colors.primary} />
-          </Marker>
-          <Marker coordinate={{ latitude: activeTrip.destinationLat, longitude: activeTrip.destinationLng }}>
-            <MaterialIcons name="location-on" size={40} color={colors.danger} />
-          </Marker>
-          {activeTrip.driver?.lat && activeTrip.driver?.lng && (
-            <Marker coordinate={{ latitude: activeTrip.driver.lat, longitude: activeTrip.driver.lng }}>
-              <MaterialIcons name="local-taxi" size={32} color={colors.accent} />
-            </Marker>
-          )}
-        </MapView>
-      ) : (
-        <View style={[styles.map, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.card }]}>
-          <MaterialIcons name="map" size={48} color={colors.muted} />
-          <Text style={{ color: colors.mutedForeground }}>Mapa no disponible en web</Text>
-        </View>
-      )}
+      <TripMap style={styles.map} activeTrip={activeTrip} colors={colors} />
 
       <View style={[styles.bottomSheet, { backgroundColor: colors.card, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View style={styles.statusHeader}>

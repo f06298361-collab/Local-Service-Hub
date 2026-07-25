@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useGetMyTrips } from '@workspace/api-client-react';
-import { MaterialIcons } from '@expo-vector-icons';
-import dayjs from 'dayjs';
+import { MaterialIcons } from '@expo/vector-icons';
+import { formatDateTime } from '@/utils/date';
 
 export default function CustomerHistory() {
   const colors = useColors();
@@ -13,7 +13,7 @@ export default function CustomerHistory() {
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.header}>
         <Text style={[styles.date, { color: colors.mutedForeground }]}>
-          {dayjs(item.createdAt).format('DD MMM YYYY, HH:mm')}
+          {formatDateTime(item.createdAt)}
         </Text>
         <Text style={[styles.price, { color: colors.foreground }]}>
           ${item.finalPrice || item.estimatedPrice || '---'}
@@ -32,8 +32,8 @@ export default function CustomerHistory() {
         </View>
       </View>
 
-      <View style={[styles.statusBadge, { backgroundColor: item.status === 'completed' ? colors.success + '20' : colors.danger + '20' }]}>
-        <Text style={[styles.statusText, { color: item.status === 'completed' ? colors.success : colors.danger }]}>
+      <View style={[styles.statusBadge, { backgroundColor: item.status === 'completed' ? colors.success + '20' : colors.destructive + '20' }]}>
+        <Text style={[styles.statusText, { color: item.status === 'completed' ? colors.success : colors.destructive }]}>
           {item.status === 'completed' ? 'Completado' : item.status === 'cancelled' ? 'Cancelado' : 'En proceso'}
         </Text>
       </View>

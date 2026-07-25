@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGetServiceTypes, useGetAvailableDrivers, useRequestTrip } from '@workspace/api-client-react';
-import { MaterialIcons } from '@expo-vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import CustomerMap from '@/components/CustomerMap';
 import { useTrip } from '@/context/TripContext';
 
 export default function CustomerHome() {
@@ -79,32 +79,7 @@ export default function CustomerHome() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {Platform.OS !== 'web' ? (
-        <MapView 
-          style={styles.map} 
-          provider={PROVIDER_DEFAULT}
-          region={region}
-          showsUserLocation
-        >
-          {availableDrivers?.map(driver => (
-            driver.lat && driver.lng && (
-              <Marker
-                key={driver.id}
-                coordinate={{ latitude: driver.lat, longitude: driver.lng }}
-              >
-                <View style={[styles.marker, { backgroundColor: colors.primary }]}>
-                  <MaterialIcons name="local-taxi" size={16} color="#fff" />
-                </View>
-              </Marker>
-            )
-          ))}
-        </MapView>
-      ) : (
-        <View style={[styles.map, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.card }]}>
-          <MaterialIcons name="map" size={48} color={colors.muted} />
-          <Text style={{ color: colors.mutedForeground }}>Mapa no disponible en web</Text>
-        </View>
-      )}
+      <CustomerMap style={styles.map} region={region} availableDrivers={availableDrivers} colors={colors} />
 
       <View style={[styles.bottomSheet, { backgroundColor: colors.card, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View style={styles.inputs}>
@@ -173,11 +148,6 @@ export default function CustomerHome() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-  marker: {
-    width: 32, height: 32, borderRadius: 16,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#fff'
-  },
   bottomSheet: {
     padding: 16,
     borderTopLeftRadius: 24,

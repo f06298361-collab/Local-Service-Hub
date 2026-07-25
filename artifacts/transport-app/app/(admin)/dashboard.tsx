@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useGetAdminStats } from '@workspace/api-client-react';
-import { MaterialIcons } from '@expo-vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/expo';
 
 export default function AdminDashboard() {

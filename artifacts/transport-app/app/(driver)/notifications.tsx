@@ -2,11 +2,8 @@ import React from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useGetNotifications, useMarkNotificationRead, Notification } from '@workspace/api-client-react';
-import { MaterialIcons } from '@expo-vector-icons';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(relativeTime);
+import { MaterialIcons } from '@expo/vector-icons';
+import { formatRelativeTime } from '@/utils/date';
 
 export default function CustomerNotifications() {
   const colors = useColors();
@@ -40,7 +37,7 @@ export default function CustomerNotifications() {
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.foreground, fontFamily: item.isRead ? 'Inter_500Medium' : 'Inter_700Bold' }]}>{item.title}</Text>
         <Text style={[styles.body, { color: colors.mutedForeground }]}>{item.body}</Text>
-        <Text style={[styles.time, { color: colors.mutedForeground }]}>{dayjs(item.createdAt).fromNow()}</Text>
+        <Text style={[styles.time, { color: colors.mutedForeground }]}>{formatRelativeTime(item.createdAt)}</Text>
       </View>
       {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: colors.accent }]} />}
     </TouchableOpacity>

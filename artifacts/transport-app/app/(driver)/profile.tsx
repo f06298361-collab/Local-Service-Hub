@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useAppAuth } from '@/context/AuthContext';
-import { MaterialIcons } from '@expo-vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/expo';
 import { useGetMyDriverProfile } from '@workspace/api-client-react';
 

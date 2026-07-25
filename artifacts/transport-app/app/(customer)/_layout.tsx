@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { MaterialIcons } from '@expo-vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 
 export default function CustomerLayout() {

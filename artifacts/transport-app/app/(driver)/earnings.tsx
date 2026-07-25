@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useGetMyEarnings, GetMyEarningsPeriod } from '@workspace/api-client-react';
-import { MaterialIcons } from '@expo-vector-icons';
-import dayjs from 'dayjs';
+import { MaterialIcons } from '@expo/vector-icons';
+import { formatDateTime } from '@/utils/date';
 
 export default function DriverEarnings() {
   const colors = useColors();
@@ -68,7 +68,7 @@ export default function DriverEarnings() {
             </View>
             <View style={styles.paymentInfo}>
               <Text style={[styles.paymentMethod, { color: colors.foreground }]}>Viaje #{payment.tripId}</Text>
-              <Text style={[styles.paymentDate, { color: colors.mutedForeground }]}>{dayjs(payment.createdAt).format('DD MMM YYYY, HH:mm')}</Text>
+              <Text style={[styles.paymentDate, { color: colors.mutedForeground }]}>{formatDateTime(payment.createdAt)}</Text>
             </View>
             <Text style={[styles.paymentAmount, { color: colors.success }]}>+${payment.driverAmount.toFixed(2)}</Text>
           </View>
